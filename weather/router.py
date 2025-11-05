@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import Temperature, City
-from schemas import CityCreate
+from schemas import CityCreate, TemperatureUpdateResponse
 from crud import (
     get_all_city_crud,
     create_city_crud,
@@ -61,7 +61,7 @@ async def delete_city(city_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post(
     "/temperatures/update",
-    response_class=List[Temperature],
+    response_model=TemperatureUpdateResponse,
     status_code=201
 )
 async def update_temparatures_all_city(db: AsyncSession = Depends(get_db)):
@@ -78,23 +78,20 @@ async def update_temparatures_all_city(db: AsyncSession = Depends(get_db)):
     return {"updated": len(updated_records), "details": updated_records}
 
 
-@router.get("/temperatures/", response_model=List[Temperature],
-            status_code=200)
-async def get_all_temperatures(db: AsyncSession = Depends(get_db)):
-    temperature = await get_all_temperaturs_crud(db)
-    if not temperature:
-        raise HTTPException(status_code=404, detail="Temparatures not found.")
-    return temperature
-
-
-@router.get("/temperatures/", response_model=Temperature, status_code=200)
-async def get_temperature_by_city_id(
-    city_id: int = Query(..., description="ID of the city"),
+@router.get("/temperatures/", response_model=List[Temperature], status_code=200)
+async def get_temperatures(
+    city_id: Optional[int] = Query(None, description="ID of the city"),
     db: AsyncSession = Depends(get_db)
 ):
-    temperature = await get_temparature_by_city_id_crud(db, city_id)
-    if not temperature:
-        raise HTTPException(
-            status_code=404, detail="Temperature for this city not found."
+    if city_id is not None:
+        temperature = await get_temparature_by_city_id_crud(db, city_id)
+        if not temperature:
+            raise HTTPException(
+                status_code=404, detail=f"Temperature for city_id {city_id} not found."
             )
-    return temperature
+        return [temperature]
+    else:
+        temperatures = await get_all_temperaturs_crud(db)
+        if not temperatures:
+            raise HTTPException(status_code=404, detail="No temperatures found.")
+        return temperatures

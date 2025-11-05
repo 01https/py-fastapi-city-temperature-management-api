@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -33,3 +34,11 @@ class Temperature(TemperatureBase):
 
     class Config:
         orm_mode = True
+
+class TemperatureUpdateDetail(BaseModel):
+    city: str
+    temperature: float
+
+class TemperatureUpdateResponse(BaseModel):
+    updated: int
+    details: List[TemperatureUpdateDetail]

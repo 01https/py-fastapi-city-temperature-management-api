@@ -77,4 +77,4 @@ async def get_temparature_by_city_id_crud(db: AsyncSession, city_id: int):
     result = await db.execute(
         select(Temperature).where(Temperature.city_id == city_id)
         )
-    return result.scalars().first()
+    return result.scalars().all()
