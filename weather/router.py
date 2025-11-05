@@ -51,7 +51,7 @@ async def update_city(
     return city
 
 
-@router.delete("/cities/{city_id}", response_class=City)
+@router.delete("/cities/{city_id}", status_code=204)
 async def delete_city(city_id: int, db: AsyncSession = Depends(get_db)):
     city = await city_delete_crud(db, city_id)
     if not city:
@@ -89,7 +89,7 @@ async def get_temperatures(
             raise HTTPException(
                 status_code=404, detail=f"Temperature for city_id {city_id} not found."
             )
-        return [temperature]
+        return temperature
     else:
         temperatures = await get_all_temperaturs_crud(db)
         if not temperatures:
